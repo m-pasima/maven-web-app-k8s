@@ -1,0 +1,37 @@
+//pipeline
+pipeline{
+    agent any
+    tools {
+        maven 'maven3.9.9'
+    }
+    stages{
+        stage('clone code') {
+            steps{
+                git branch: 'main', url: 'https://github.com/m-pasima/maven-web-app-demo.git'
+            }
+        }
+        stage('maven build'){
+            steps{
+                sh "mvn clean package"
+            }
+        }
+        stage('Sonar Scan'){
+            steps{
+                sh "mvn verify sonar:sonar"
+            }
+        }
+        stage('Upload build artifacts'){
+            steps{
+                sh "mvn deploy"
+            }
+        }
+        stage('Deploy war application'){
+            steps{
+               deploy adapters: [tomcat9(alternativeDeploymentContext: '', credentialsId: 'tomcat-creds', path: '', url: 'http://35.179.144.183:8080/')], contextPath: 'tesco', war: '**/*.war'
+            }
+        }
+
+
+    }
+
+}

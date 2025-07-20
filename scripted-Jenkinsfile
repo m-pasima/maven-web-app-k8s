@@ -1,0 +1,42 @@
+
+// Jenkins Scripted Pipeline (Jenkinsfile)
+node {
+    // Set up tool and environment variable
+    def mvnHome = tool name: 'maven3.9.9', type: 'maven'
+    
+    
+     stage('Clone Code') {
+       git branch: 'main', url: 'https://github.com/m-pasima/maven-web-app-demo.git'
+    }
+
+    stage('Print Maven Home') {
+        echo "Maven Home is: ${mvnHome}"
+    }
+
+    stage('Clean and Package') {
+        // Run the Maven build
+        sh "${mvnHome}/bin/mvn clean package"
+    }
+    stage('Scan with SonarQube') {
+      
+        sh "${mvnHome}/bin/mvn clean verify sonar:sonar"
+    }
+    
+      stage('Upload to Nexus') {
+      
+        sh "${mvnHome}/bin/mvn deploy"
+    }
+    
+       stage('Deploy To Tomcat') {
+   
+        deploy adapters: [tomcat9(alternativeDeploymentContext: '', credentialsId: 'tomcat-cred', path: '', url: 'http://18.175.51.133:8080')], contextPath: 'tesla.war', war: '**/*.war'
+    }
+   stage('Slack Notification') {
+   
+slackSend channel: 'devopsacademyworld', message: 'Build Status: SUCCESS  Job Name: pipeline-project  Build Number: 5  Branch: main Triggered By: passy  Duration: 3 min 25 sec Build URL:http://18.130.114.10:8080/job/first-pipeline/'
+    }
+    
+    
+} 
+    
+  
